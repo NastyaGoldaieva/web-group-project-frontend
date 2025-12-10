@@ -1,28 +1,33 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import api from '../api/axios';
 
 function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from?.pathname || '/mentors';
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    console.log("Відправляю:", { username, password });
-
     try {
-      const response = await api.post('token/', {
+      const response = await api.post('auth/token/', {
         username: username,
         password: password
       });
-
       localStorage.setItem('access_token', response.data.access);
       localStorage.setItem('refresh_token', response.data.refresh);
-
-      alert("Раді бачити тебе знову! ");
-      navigate('/mentors');
-
+      try {
+        const me = await api.get('auth/me/');
+        localStorage.setItem('user', JSON.stringify(me.data));
+        localStorage.setItem('user_id', String(me.data.id));
+        localStorage.setItem('role', me.data.role || '');
+      } catch (meErr) {
+        console.warn('Не змогли отримати /auth/me/:', meErr);
+      }
+      window.dispatchEvent(new Event('authChanged'));
+      navigate(from, { replace: true });
     } catch (error) {
       console.error("Помилка:", error);
       alert("Ой! Невірний логін або пароль ");
@@ -33,14 +38,13 @@ function LoginPage() {
     <div style={styles.container}>
       <div style={styles.card}>
         <div style={styles.header}>
-          <span style={{ fontSize: '40px' }}></span>
-          <h2 style={styles.title}>Привіт, красуне/красунчику!</h2>
-          <p style={styles.subtitle}>Кицюня увійди, щоб продовжити навчання</p>
+          <h2 style={styles.title}>Привіт!</h2>
+          <p style={styles.subtitle}>Увійдіть, щоб продовжити</p>
         </div>
 
         <form onSubmit={handleLogin} style={styles.form}>
           <div style={styles.inputGroup}>
-            <label style={styles.label}>Твій логін</label>
+            <label style={styles.label}>Логін</label>
             <input
               type="text"
               placeholder="Username"
@@ -67,7 +71,7 @@ function LoginPage() {
         </form>
 
         <p style={{ marginTop: '20px', color: '#888', fontSize: '0.9rem' }}>
-          Ще не маєш акаунту? <span style={{ color: '#ff6b81', cursor: 'pointer' }}>Зареєструйся</span>
+          Ще не маєш акаунту? <Link to="/register" style={{ color: '#ff6b81' }}>Зареєструйся</Link>
         </p>
       </div>
     </div>

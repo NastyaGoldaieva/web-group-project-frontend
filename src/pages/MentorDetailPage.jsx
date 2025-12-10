@@ -4,13 +4,13 @@ import api from '../api/axios';
 
 function MentorDetailPage() {
   const { id } = useParams();
-  const [student, setStudent] = useState(null);
+  const [mentor, setMentor] = useState(null);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get(`students/${id}/`)
-       .then(res => setStudent(res.data))
+    api.get(`mentors/${id}/`)
+       .then(res => setMentor(res.data))
        .catch(err => console.error(err))
        .finally(() => setLoading(false));
   }, [id]);
@@ -24,7 +24,7 @@ function MentorDetailPage() {
 
     try {
       await api.post('requests/', {
-        mentor: student.id,
+        mentor: mentor.user?.id || mentor.user,
         message: message
       });
       alert("Заявку успішно відправлено!");
@@ -36,21 +36,21 @@ function MentorDetailPage() {
   };
 
   if (loading) return <div>Завантаження...</div>;
-  if (!student) return <div>Студента не знайдено</div>;
+  if (!mentor) return <div>Ментор не знайдено</div>;
 
   return (
     <div style={{ maxWidth: '800px', margin: '40px auto', padding: '20px' }}>
       <Link to="/mentors">← Назад</Link>
 
       <div style={{ marginTop: '20px', border: '1px solid #ddd', borderRadius: '12px', padding: '30px', background: 'white' }}>
-        <h1>{student.username}</h1>
-        <p><strong>Bio:</strong> {student.bio}</p>
-        <p><strong>Інтереси:</strong> {student.interests}</p>
+        <h1>{mentor.user?.username}</h1>
+        <p><strong>Title:</strong> {mentor.title}</p>
+        <p><strong>Bio:</strong> {mentor.bio}</p>
+        <p><strong>Skills:</strong> {mentor.skills}</p>
 
         <hr style={{ margin: '20px 0' }} />
 
-        {}
-        <h3>Хочеш працювати з цим ментором?</h3>
+        <h3>Напиши повідомлення ментору</h3>
         <textarea
           placeholder="Напиши коротке повідомлення..."
           value={message}
