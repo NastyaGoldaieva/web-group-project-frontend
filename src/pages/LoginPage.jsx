@@ -69,7 +69,9 @@ function LoginPage() {
             Увійти
           </button>
         </form>
-
+      <Link to="/forgot-password" style={{ fontSize: '0.9rem', color: '#ff6b81', marginTop: '10px', display: 'inline-block' }}>
+      Забули пароль?
+      </Link>
         <p style={{ marginTop: '20px', color: '#888', fontSize: '0.9rem' }}>
           Ще не маєш акаунту? <Link to="/register" style={{ color: '#ff6b81' }}>Зареєструйся</Link>
         </p>

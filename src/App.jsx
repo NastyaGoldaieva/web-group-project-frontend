@@ -6,80 +6,38 @@ import MentorDetailPage from './pages/MentorDetailPage';
 import DashboardPage from './pages/DashboardPage';
 import LandingPage from './pages/LandingPage';
 import RegisterPage from './pages/RegisterPage';
-import ProposalsPage from './pages/ProposalsPage';
-import ProposalDetailPage from './pages/ProposalDetailPage';
+import ActivationPage from './pages/ActivationPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
+import MyStudentsPage from './pages/MyStudentsPage';
+
 import { logout } from './api/auth';
 import RequireAuth from './components/RequireAuth';
 import api from './api/axios';
 
 function App() {
-  const [user, setUser] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('user'));
-    } catch {
-      return null;
-    }
-  });
+  const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     const init = async () => {
       const token = localStorage.getItem('access_token');
-      if (!token) {
-        setUser(null);
-        return;
-      }
-      try {
-        const stored = localStorage.getItem('user');
-        if (stored) {
-          setUser(JSON.parse(stored));
-          return;
-        }
-        const res = await api.get('auth/me/');
-        localStorage.setItem('user', JSON.stringify(res.data));
-        localStorage.setItem('user_id', String(res.data.id));
-        localStorage.setItem('role', res.data.role || '');
-        setUser(res.data);
-      } catch (err) {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        localStorage.removeItem('user');
-        localStorage.removeItem('user_id');
-        localStorage.removeItem('role');
-        setUser(null);
+      if (token) {
+        try {
+           const res = await api.get('auth/me/');
+           setUser(res.data);
+           localStorage.setItem('role', res.data.role);
+        } catch (e) { setUser(null); }
       }
     };
     init();
   }, []);
 
-  useEffect(() => {
-    const onStorage = () => {
-      try {
-        setUser(JSON.parse(localStorage.getItem('user')));
-      } catch {
-        setUser(null);
-      }
-    };
-    window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
-  }, []);
-
-  useEffect(() => {
-    const onAuthChanged = () => {
-      try {
-        setUser(JSON.parse(localStorage.getItem('user')));
-      } catch {
-        setUser(null);
-      }
-    };
-    window.addEventListener('authChanged', onAuthChanged);
-    return () => window.removeEventListener('authChanged', onAuthChanged);
-  }, []);
-
   const handleLogout = async () => {
     await logout();
     setUser(null);
-    navigate('/login', { replace: true });
+    localStorage.removeItem('role');
+    navigate('/login');
   };
 
   return (
@@ -88,11 +46,16 @@ function App() {
         <div style={styles.logo}>MentorMatch</div>
         <div style={styles.menu}>
           <Link to="/" style={styles.link}>Головна</Link>
-          <Link to="/mentors" style={styles.link}>Ментори</Link>
+
+          {user?.role === 'mentor' ? (
+             <Link to="/students" style={styles.link}>Студенти</Link>
+          ) : (
+             <Link to="/mentors" style={styles.link}>Ментори</Link>
+          )}
 
           {user ? (
             <>
-              <Link to="/dashboard" style={styles.accentLink}>Кабінет {user.username}</Link>
+              <Link to="/dashboard" style={styles.accentLink}>Кабінет</Link>
               <button onClick={handleLogout} style={styles.logoutButton}>Вихід</button>
             </>
           ) : (
@@ -106,24 +69,16 @@ function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/activate/:uid/:token" element={<ActivationPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password/:uid/:token" element={<ResetPasswordPage />} />
+
           <Route path="/mentors" element={<MentorListPage />} />
           <Route path="/mentors/:id" element={<MentorDetailPage />} />
 
-          <Route path="/dashboard" element={
-            <RequireAuth>
-              <DashboardPage />
-            </RequireAuth>
-          } />
-          <Route path="/proposals" element={
-            <RequireAuth>
-              <ProposalsPage />
-            </RequireAuth>
-          } />
-          <Route path="/proposals/:id" element={
-            <RequireAuth>
-              <ProposalDetailPage />
-            </RequireAuth>
-          } />
+          <Route path="/dashboard" element={<RequireAuth><DashboardPage /></RequireAuth>} />
+
+          <Route path="/students" element={<RequireAuth><MyStudentsPage /></RequireAuth>} />
         </Routes>
       </div>
     </div>
@@ -131,23 +86,13 @@ function App() {
 }
 
 const styles = {
-  nav: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '15px 40px',
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    borderBottom: '1px solid #ffe4e9',
-    position: 'sticky',
-    top: 0,
-    zIndex: 100,
-    backdropFilter: 'blur(10px)',
-  },
-  logo: { fontWeight: '800', fontSize: '24px' },
-  menu: { display: 'flex', alignItems: 'center', gap: '18px' },
-  link: { color: '#7a6375', textDecoration: 'none' },
-  accentLink: { color: '#ff6b81', textDecoration: 'none', fontWeight: '600' },
-  buttonLink: { padding: '8px 20px', backgroundColor: '#ff6b81', color: 'white', borderRadius: '20px', textDecoration: 'none' },
-  logoutButton: { marginLeft: 8, padding: '6px 12px', background: '#ef4444', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer' }
+  nav: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 40px', background: 'rgba(255,255,255,0.9)', borderBottom: '1px solid #ffe4e9', position: 'sticky', top: 0, backdropFilter: 'blur(10px)', zIndex: 100 },
+  logo: { fontWeight: '800', fontSize: '24px', color: '#ff6b81' },
+  menu: { display: 'flex', alignItems: 'center', gap: '20px' },
+  link: { color: '#555', textDecoration: 'none', fontWeight: '500' },
+  accentLink: { color: '#ff6b81', textDecoration: 'none', fontWeight: 'bold' },
+  buttonLink: { padding: '8px 20px', background: '#ff6b81', color: 'white', borderRadius: '20px', textDecoration: 'none', fontWeight: 'bold' },
+  logoutButton: { padding: '6px 12px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }
 };
+
 export default App;

@@ -50,7 +50,6 @@ function ProposalDetailPage() {
     try {
       const res = await api.post(`proposals/${id}/confirm/`);
       alert('Зустріч підтверджено.');
-      // optional: redirect to meetings or show meeting
       navigate('/proposals');
     } catch (err) {
       console.error(err);
@@ -62,7 +61,6 @@ function ProposalDetailPage() {
   if (!proposal) return <div style={{ padding: 20 }}>Пропозиція не знайдена</div>;
 
   const meIsStudent = proposal.student === parseInt(localStorage.getItem('user_id')) || false;
-  // note: if you store user id in localStorage (not implemented), adjust logic. We rely on server permission checks anyway.
 
   return (
     <div style={{ padding: 20, maxWidth: 900, margin: '20px auto' }}>
