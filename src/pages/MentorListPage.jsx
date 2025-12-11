@@ -14,7 +14,6 @@ function MentorListPage() {
         setMentors(response.data.results || response.data);
       } catch (err) {
         console.error("Помилка:", err);
-        setError('Не вдалося завантажити список. Перевір, чи запущено Django!');
       } finally {
         setLoading(false);
       }
@@ -49,8 +48,8 @@ function MentorListPage() {
               <h3 style={{ margin: '0 0 10px 0', color: '#2c3e50' }}>{mentor.user?.username || mentor.user}</h3>
 
               <div style={{ marginBottom: '10px', fontSize: '14px', color: '#555' }}>
-                <p>📍 <strong>Локація:</strong> {mentor.location || 'Не вказано'}</p>
-                <p>🎓 <strong>Додатково:</strong> {mentor.title || '-'}</p>
+                <p> <strong>Локація:</strong> {mentor.location || 'Не вказано'}</p>
+                <p> <strong>Додатково:</strong> {mentor.title || '-'}</p>
               </div>
 
               <p style={{ fontStyle: 'italic', color: '#666', marginBottom: '15px' }}>
