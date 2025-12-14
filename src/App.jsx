@@ -11,6 +11,7 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import MyStudentsPage from './pages/MyStudentsPage';
 import ProposalsPage from './pages/ProposalsPage';
+import MentorProposalPage from './pages/MentorProposalPage';
 import { logout } from './api/auth';
 import RequireAuth from './components/RequireAuth';
 import api from './api/axios';
@@ -26,11 +27,17 @@ function App() {
       const token = localStorage.getItem('access_token');
       if (token) {
         try {
-           const res = await api.get('auth/me/');
-           setUser(res.data);
-           localStorage.setItem('role', res.data.role);
-           localStorage.setItem('user_id', String(res.data.id));
-        } catch (e) { setUser(null); }
+          const res = await api.get('auth/me/');
+          setUser(res.data);
+          localStorage.setItem('role', res.data.role || '');
+          localStorage.setItem('user_id', String(res.data.id));
+        } catch (e) {
+          setUser(null);
+          localStorage.removeItem('user_id');
+        }
+      } else {
+        setUser(null);
+        localStorage.removeItem('user_id');
       }
     };
     init();
@@ -114,6 +121,7 @@ function App() {
           <Route path="/reset-password/:uid/:token" element={<ResetPasswordPage />} />
           <Route path="/mentors" element={<MentorListPage />} />
           <Route path="/mentors/:id" element={<MentorDetailPage />} />
+          <Route path="/mentor/proposals/:id" element={<RequireAuth><MentorProposalPage /></RequireAuth>} />
           <Route path="/dashboard" element={<RequireAuth><DashboardPage /></RequireAuth>} />
           <Route path="/students" element={<RequireAuth><MyStudentsPage /></RequireAuth>} />
           <Route path="/proposals" element={<RequireAuth><ProposalsPage /></RequireAuth>} />
