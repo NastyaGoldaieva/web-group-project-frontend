@@ -1,158 +1,106 @@
 import { useState } from 'react';
-import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import api from '../api/axios';
+import { GoogleLogin } from '@react-oauth/google';
 
 function LoginPage() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [formData, setFormData] = useState({ username: '', password: '' });
+  const [error, setError] = useState('');
   const navigate = useNavigate();
-  const location = useLocation();
-  const from = location.state?.from?.pathname || '/mentors';
 
-  const handleLogin = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await api.post('auth/token/', {
-        username: username,
-        password: password
-      });
-      localStorage.setItem('access_token', response.data.access);
-      localStorage.setItem('refresh_token', response.data.refresh);
-      try {
-        const me = await api.get('auth/me/');
-        localStorage.setItem('user', JSON.stringify(me.data));
-        localStorage.setItem('user_id', String(me.data.id));
-        localStorage.setItem('role', me.data.role || '');
-      } catch (meErr) {
-        console.warn('Не змогли отримати /auth/me/:', meErr);
-      }
-      window.dispatchEvent(new Event('authChanged'));
-      navigate(from, { replace: true });
-    } catch (error) {
-      console.error("Помилка:", error);
-      alert("Ой! Невірний логін або пароль ");
+      const res = await api.post('auth/token/', formData);
+      handleAuthSuccess(res.data);
+    } catch (err) {
+      setError('Невірний логін або пароль');
     }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      const res = await api.post('auth/google/', {
+        token: credentialResponse.credential
+      });
+
+      if (res.data.status === 'need_registration') {
+        navigate('/google-register', {
+            state: {
+                token: res.data.google_token,
+                email: res.data.email,
+                firstName: res.data.first_name
+            }
+        });
+      } else if (res.data.status === 'login_success') {
+        handleAuthSuccess(res.data);
+      }
+
+    } catch (err) {
+      console.error("Google Login Error:", err);
+      setError('Помилка входу через Google');
+    }
+  };
+
+  const handleAuthSuccess = (data) => {
+      localStorage.setItem('access_token', data.access);
+      localStorage.setItem('refresh_token', data.refresh);
+      localStorage.setItem('user', JSON.stringify(data.user));
+
+      window.dispatchEvent(new Event('authChanged'));
+
+      navigate('/dashboard');
   };
 
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <div style={styles.header}>
-          <h2 style={styles.title}>Привіт!</h2>
-          <p style={styles.subtitle}>Увійдіть, щоб продовжити</p>
+        <h2 style={{color: '#333'}}>Вхід</h2>
+
+        <form onSubmit={handleSubmit} style={styles.form}>
+          <input
+            placeholder="Логін"
+            onChange={e => setFormData({...formData, username: e.target.value})}
+            style={styles.input}
+          />
+          <input
+            type="password"
+            placeholder="Пароль"
+            onChange={e => setFormData({...formData, password: e.target.value})}
+            style={styles.input}
+          />
+          <button type="submit" style={styles.button}>Увійти</button>
+        </form>
+
+        <div style={{marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center'}}>
+            <p style={{color: '#888', fontSize: '0.9rem'}}>— або —</p>
+
+            <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => setError('Google Login Failed')}
+                shape="pill"
+            />
         </div>
 
-        <form onSubmit={handleLogin} style={styles.form}>
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>Логін</label>
-            <input
-              type="text"
-              placeholder="Username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              style={styles.input}
-            />
-          </div>
+        {error && <p style={{color: 'red', marginTop: '10px'}}>{error}</p>}
 
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>Пароль</label>
-            <input
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              style={styles.input}
-            />
-          </div>
-
-          <button type="submit" style={styles.button}>
-            Увійти
-          </button>
-        </form>
-      <Link to="/forgot-password" style={{ fontSize: '0.9rem', color: '#ff6b81', marginTop: '10px', display: 'inline-block' }}>
-      Забули пароль?
-      </Link>
-        <p style={{ marginTop: '20px', color: '#888', fontSize: '0.9rem' }}>
-          Ще не маєш акаунту? <Link to="/register" style={{ color: '#ff6b81' }}>Зареєструйся</Link>
-        </p>
+        <div style={{marginTop: '15px'}}>
+            <Link to="/forgot-password" style={styles.link}>Забули пароль?</Link>
+            <br/>
+            <Link to="/register" style={styles.link}>Створити акаунт</Link>
+        </div>
       </div>
     </div>
   );
 }
 
 const styles = {
-  container: {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    minHeight: "100vh",
-    background: 'linear-gradient(135deg, #fffafc 0%, #ffe4e9 100%)',
-    fontFamily: "'Inter', sans-serif",
-  },
-  card: {
-    width: "100%",
-    maxWidth: "400px",
-    padding: "40px",
-    backgroundColor: "white",
-    borderRadius: "30px",
-    textAlign: "center",
-    boxShadow: "0 10px 40px rgba(255, 182, 193, 0.4)",
-    border: "2px solid #fff0f3",
-  },
-  header: {
-    marginBottom: "30px",
-  },
-  title: {
-    margin: "10px 0 5px 0",
-    color: "#333",
-    fontSize: "2rem",
-    fontWeight: "800",
-  },
-  subtitle: {
-    color: "#7a6375",
-    fontSize: "1rem",
-  },
-  form: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "20px",
-  },
-  inputGroup: {
-    textAlign: "left",
-  },
-  label: {
-    display: "block",
-    marginBottom: "8px",
-    color: "#555",
-    fontWeight: "600",
-    fontSize: "0.9rem",
-    marginLeft: "10px",
-  },
-  input: {
-    width: "100%",
-    padding: "15px",
-    fontSize: "16px",
-    borderRadius: "20px",
-    border: "2px solid #ffe4e9",
-    backgroundColor: "#fffafc",
-    color: "#333",
-    outline: "none",
-    transition: "border-color 0.3s",
-    boxSizing: "border-box",
-  },
-  button: {
-    padding: "15px",
-    background: 'linear-gradient(45deg, #ff9a9e, #ff6b81)',
-    color: "white",
-    border: "none",
-    borderRadius: "30px",
-    fontSize: "1.1rem",
-    fontWeight: "bold",
-    cursor: "pointer",
-    transition: "transform 0.2s, box-shadow 0.2s",
-    marginTop: "10px",
-    boxShadow: "0 5px 15px rgba(255, 107, 129, 0.4)",
-  }
+  container: { display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh', background: '#fffafc' },
+  card: { padding: '40px', background: 'white', borderRadius: '20px', boxShadow: '0 4px 20px rgba(0,0,0,0.1)', textAlign: 'center', width: '320px' },
+  form: { display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '20px' },
+  input: { padding: '12px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '1rem' },
+  button: { padding: '12px', background: '#ff6b81', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' },
+  link: { color: '#7a6375', textDecoration: 'none', fontSize: '0.9rem', display: 'inline-block', marginTop: '5px' }
 };
 
 export default LoginPage;

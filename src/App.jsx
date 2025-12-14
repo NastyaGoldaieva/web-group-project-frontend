@@ -16,6 +16,7 @@ import { logout } from './api/auth';
 import RequireAuth from './components/RequireAuth';
 import api from './api/axios';
 import { connect, disconnect } from './api/ws';
+import GoogleRegisterPage from './pages/GoogleRegisterPage';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -113,6 +114,7 @@ function App() {
 
       <div style={{ minHeight: '90vh', backgroundColor: '#fffafc' }}>
         <Routes>
+          <Route path="/google-register" element={<GoogleRegisterPage />} />
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
