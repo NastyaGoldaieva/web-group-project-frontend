@@ -12,6 +12,9 @@ import ResetPasswordPage from './pages/ResetPasswordPage';
 import MyStudentsPage from './pages/MyStudentsPage';
 import ProposalsPage from './pages/ProposalsPage';
 import MentorProposalPage from './pages/MentorProposalPage';
+import ProposalDetailPage from './pages/ProposalDetailPage';
+import SessionsPage from './pages/SessionsPage';
+import TimeSelectionPage from './pages/TimeSelectionPage';
 import { logout } from './api/auth';
 import RequireAuth from './components/RequireAuth';
 import api from './api/axios';
@@ -51,7 +54,15 @@ function App() {
     wsUserIdRef.current = null;
     if (userId) {
       connect(userId, (msg) => {
-        window.dispatchEvent(new CustomEvent('dataUpdated', { detail: msg }));
+        try {
+          const data = msg.data || {};
+          const localId = String(userId);
+          if (!data.recipient_id || String(data.recipient_id) === localId || data.broadcast === true) {
+            window.dispatchEvent(new CustomEvent('dataUpdated', { detail: msg }));
+          }
+        } catch (e) {
+          window.dispatchEvent(new CustomEvent('dataUpdated', { detail: msg }));
+        }
       });
       wsUserIdRef.current = userId;
     }
@@ -96,11 +107,8 @@ function App() {
         <div style={styles.logo}>MentorMatch</div>
         <div style={styles.menu}>
           <Link to="/" style={styles.link}>Головна</Link>
-          {user?.role === 'mentor' ? (
-             <Link to="/students" style={styles.link}>Студенти</Link>
-          ) : (
-             <Link to="/mentors" style={styles.link}>Ментори</Link>
-          )}
+          <Link to="/mentors" style={styles.link}>Ментори</Link>
+          <Link to="/sessions" style={styles.link}>Сесії</Link>
           {user ? (
             <>
               <Link to="/dashboard" style={styles.accentLink}>Кабінет</Link>
@@ -124,6 +132,9 @@ function App() {
           <Route path="/mentors" element={<MentorListPage />} />
           <Route path="/mentors/:id" element={<MentorDetailPage />} />
           <Route path="/mentor/proposals/:id" element={<RequireAuth><MentorProposalPage /></RequireAuth>} />
+          <Route path="/proposals/:id" element={<RequireAuth><ProposalDetailPage /></RequireAuth>} />
+          <Route path="/sessions" element={<RequireAuth><SessionsPage /></RequireAuth>} />
+          <Route path="/sessions/:id/select" element={<RequireAuth><TimeSelectionPage /></RequireAuth>} />
           <Route path="/dashboard" element={<RequireAuth><DashboardPage /></RequireAuth>} />
           <Route path="/students" element={<RequireAuth><MyStudentsPage /></RequireAuth>} />
           <Route path="/proposals" element={<RequireAuth><ProposalsPage /></RequireAuth>} />
