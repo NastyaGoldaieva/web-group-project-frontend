@@ -9,10 +9,15 @@ function RegisterPage() {
   const [role, setRole] = useState('student');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [whatsapp, setWhatsapp] = useState('');
   const navigate = useNavigate();
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    if (!whatsapp.trim()) {
+      alert('Будь ласка, вкажіть ваш нікнейм у WhatsApp (без пробілів).');
+      return;
+    }
     try {
       await api.post('auth/register/', {
         username,
@@ -20,9 +25,10 @@ function RegisterPage() {
         password,
         role,
         first_name: firstName,
-        last_name: lastName
+        last_name: lastName,
+        whatsapp_username: whatsapp.trim()
       });
-      alert('Реєстрація пройшла успішно. Увійдіть, будь ласка.');
+      alert('Реєстрація пройшла успішно. Будь ласка, увійдіть.');
       navigate('/login');
     } catch (err) {
       console.error(err);
@@ -42,7 +48,7 @@ function RegisterPage() {
           <option value="mentor">Ментор</option>
         </select>
 
-        <label style={styles.label}>Логін</label>
+        <label style={styles.label}>Нікнейм</label>
         <input value={username} onChange={(e) => setUsername(e.target.value)} style={styles.input} required />
 
         <label style={styles.label}>Email</label>
@@ -50,6 +56,9 @@ function RegisterPage() {
 
         <label style={styles.label}>Пароль</label>
         <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} style={styles.input} required minLength={8} />
+
+        <label style={styles.label}>WhatsApp нікнейм</label>
+        <input value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} style={styles.input} required placeholder="наприклад 380501234567 або username"/>
 
         <label style={styles.label}>Ім'я</label>
         <input value={firstName} onChange={(e) => setFirstName(e.target.value)} style={styles.input} />
