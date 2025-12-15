@@ -14,13 +14,20 @@ function ProposalDetailPage() {
   const { id } = useParams();
   const [proposal, setProposal] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [selected, setSelected] = useState(null);
+  const [selectedKey, setSelectedKey] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
 
   const fetchProposal = async () => {
     try {
+      setLoading(true);
       const res = await api.get(`proposals/${id}/`);
       setProposal(res.data);
+      if (res.data.chosen_slot) {
+        setSelectedKey(`${res.data.chosen_slot.start}|${res.data.chosen_slot.end}`);
+      } else {
+        setSelectedKey(null);
+      }
     } catch (err) {
       console.error(err);
       alert('Не вдалося завантажити пропозицію.');
@@ -31,18 +38,27 @@ function ProposalDetailPage() {
 
   useEffect(() => { fetchProposal(); }, [id]);
 
+  const role = localStorage.getItem('role');
+  const userId = localStorage.getItem('user_id');
+  const meIsStudent = proposal ? String(proposal.student) === String(userId) && role === 'student' : false;
+  const meIsMentor = proposal ? String(proposal.mentor) === String(userId) && role === 'mentor' : false;
+
   const handleSelect = async () => {
-    if (!selected) {
+    if (!selectedKey) {
       alert('Оберіть слот.');
       return;
     }
+    setSubmitting(true);
     try {
-      await api.post(`proposals/${id}/select/`, { chosen_slot: selected });
+      const [start, end] = selectedKey.split('|');
+      const resp = await api.post(`proposals/${id}/select/`, { chosen_slot: { start, end } });
+      setProposal(resp.data);
       alert('Слот обрано. Чекайте підтвердження від ментора.');
-      fetchProposal();
     } catch (err) {
       console.error(err);
-      alert('Помилка вибору слоту.');
+      alert(err?.response?.data?.detail || 'Помилка вибору слоту.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -60,8 +76,6 @@ function ProposalDetailPage() {
   if (loading) return <div style={{ textAlign: 'center', marginTop: 50 }}>Завантаження...</div>;
   if (!proposal) return <div style={{ padding: 20 }}>Пропозиція не знайдена</div>;
 
-  const meIsStudent = proposal.student === parseInt(localStorage.getItem('user_id')) || false;
-
   return (
     <div style={{ padding: 20, maxWidth: 900, margin: '20px auto' }}>
       <h2>Пропозиція #{proposal.id}</h2>
@@ -73,18 +87,33 @@ function ProposalDetailPage() {
         <h4>Слоти</h4>
         <div style={{ display: 'grid', gap: 8 }}>
           { (proposal.slots || []).map((s, idx) => {
-            const isChosen = proposal.chosen_slot && proposal.chosen_slot.start === s.start;
+            const key = `${s.start}|${s.end}`;
+            const isChosen = proposal.chosen_slot && proposal.chosen_slot.start === s.start && proposal.chosen_slot.end === s.end;
+            const isSelectedLocal = selectedKey === key;
             return (
-              <div key={idx} style={{
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                padding: 10, borderRadius: 8, border: isChosen ? '2px solid #4f46e5' : '1px solid #eee',
-                background: isChosen ? '#eef2ff' : 'white'
-              }}>
+              <div
+                key={idx}
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: 10,
+                  borderRadius: 8,
+                  border: isChosen || isSelectedLocal ? '2px solid #4f46e5' : '1px solid #eee',
+                  background: isChosen || isSelectedLocal ? '#eef2ff' : 'white',
+                  userSelect: 'none'
+                }}
+              >
                 <div>{toLocal(s.start)} — {toLocal(s.end)}</div>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  { proposal.status === 'pending' ? (
-                    <button onClick={() => setSelected(s)} style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #ddd' }}>
-                      Обрати
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  { proposal.status === 'pending' && meIsStudent ? (
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); setSelectedKey(key); }}
+                      style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #ddd', cursor: 'pointer' }}
+                      disabled={submitting}
+                    >
+                      {isSelectedLocal ? 'Обрано' : 'Обрати'}
                     </button>
                   ) : null }
                   { isChosen ? <span style={{ color: '#4f46e5', fontWeight: 700 }}>Обр.</span> : null }
@@ -96,22 +125,22 @@ function ProposalDetailPage() {
       </div>
 
       <div style={{ marginTop: 18 }}>
-        {proposal.status === 'pending' ? (
+        {proposal.status === 'pending' && meIsStudent ? (
           <div>
-            <button onClick={handleSelect} style={{ padding: '10px 14px', background: '#10b981', color: 'white', borderRadius: 8, border: 'none' }}>
-              Обрати слот
+            <button onClick={handleSelect} disabled={submitting || !selectedKey} style={{ padding: '10px 14px', background: submitting || !selectedKey ? '#9ee0bf' : '#10b981', color: 'white', borderRadius: 8, border: 'none', cursor: submitting || !selectedKey ? 'not-allowed' : 'pointer' }}>
+              {submitting ? 'Обробка...' : 'Обрати слот'}
             </button>
           </div>
         ) : null}
 
-        {proposal.status === 'student_chosen' ? (
-          <div style={{ display: 'flex', gap: 8 }}>
+        {proposal.status === 'student_chosen' && meIsMentor ? (
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <div>
               <strong>Обраний слот:</strong> {proposal.chosen_slot ? `${toLocal(proposal.chosen_slot.start)} — ${toLocal(proposal.chosen_slot.end)}` : '—'}
             </div>
             <div>
-              <button onClick={handleConfirm} style={{ padding: '10px 14px', background: '#4f46e5', color: 'white', borderRadius: 8, border: 'none' }}>
-                Підтвердити (для ментора)
+              <button onClick={handleConfirm} style={{ padding: '10px 14px', background: '#4f46e5', color: 'white', borderRadius: 8, border: 'none', cursor: 'pointer' }}>
+                Підтвердити
               </button>
             </div>
           </div>
