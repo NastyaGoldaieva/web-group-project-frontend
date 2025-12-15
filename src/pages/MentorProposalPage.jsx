@@ -105,13 +105,38 @@ function MentorProposalPage() {
     }
     setSubmitting(true);
     try {
-      await api.post(`proposals/${id}/propose_slots/`, { slots: toSend });
+      const res = await api.post(`proposals/${id}/propose_slots/`, { slots: toSend });
+      setProposal(res.data);
       window.alert('Слоти надіслані студенту.');
       navigate('/proposals');
     } catch (err) {
       setError(err?.response?.data?.detail || 'Не вдалося надіслати слоти.');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleClearChosen = async () => {
+    if (!window.confirm('Ви впевнені, що хочете зняти обраний студентом слот?')) return;
+    try {
+      const res = await api.post(`proposals/${id}/clear_chosen/`);
+      setProposal(res.data);
+      window.alert('Обраний слот було знято, студент повідомлений.');
+      // refresh slots if provided
+      const existing = res.data.slots || [];
+      if (existing.length) {
+        const mapped = existing.map(s => {
+          const startParts = isoToDateTimeParts(s.start);
+          const endParts = isoToDateTimeParts(s.end);
+          return { date: startParts.date || endParts.date, start: startParts.start, end: endParts.start };
+        });
+        setSlots(mapped);
+      } else {
+        setSlots([{ date: '', start: '', end: '' }]);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Не вдалося зняти обраний слот.');
     }
   };
 
@@ -127,6 +152,19 @@ function MentorProposalPage() {
       <form onSubmit={handleSubmit}>
         <h3>Вкажіть зручні для вас слоти</h3>
         <p>Вкажіть дату та час початку й кінця для кожного слоту.</p>
+
+        {proposal.chosen_slot ? (
+          <div style={{ margin: '12px 0', padding: 12, border: '1px solid #ffdfe5', borderRadius: 10, background: '#fff7f9' }}>
+            <div style={{ fontWeight: 700, marginBottom: 6 }}>Обраний студентом слот</div>
+            <div style={{ marginBottom: 8 }}>{new Date(proposal.chosen_slot.start).toLocaleString()} — {new Date(proposal.chosen_slot.end).toLocaleString()}</div>
+            <div>
+              <button type="button" onClick={handleClearChosen} style={{ padding: '8px 12px', background: '#ff6b81', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer' }}>
+                Зняти обраний слот
+              </button>
+            </div>
+          </div>
+        ) : null}
+
         {slots.map((s, idx) => (
           <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1fr 120px 120px 80px', gap: 8, marginBottom: 8, alignItems: 'center' }}>
             <input

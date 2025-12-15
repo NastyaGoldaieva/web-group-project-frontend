@@ -33,49 +33,47 @@ export default function SessionsPage() {
     fetch();
   }, []);
 
-  if (loading) return <div style={{ textAlign: 'center', marginTop: 50 }}>Завантаження...</div>;
-  if (!proposals.length) return <div style={{ padding: 20 }}>У вас поки немає активних сесій.</div>;
+  if (loading) return <div className="page-hero small"><div className="container center">Завантаження...</div></div>;
+  if (!proposals.length) return <div className="page-hero small"><div className="container center">У вас поки немає активних сесій.</div></div>;
 
   return (
-    <div style={{ padding: 20, maxWidth: 1000, margin: '0 auto' }}>
-      <h2>Мої сесії</h2>
-      <div style={{ display: 'grid', gap: 12 }}>
-        {proposals.map(p => {
-          const amMentor = role === 'mentor' && String(p.mentor) === String(userId);
-          const amStudent = role === 'student' && String(p.student) === String(userId);
-          return (
-            <div key={p.id} style={{ border: '1px solid #eee', padding: 14, borderRadius: 8, background: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <div style={{ fontWeight: 700 }}>#{p.id} — {p.student_username} ⇄ {p.mentor_username}</div>
-                <div style={{ marginTop: 6 }}>Статус: <span style={{ fontWeight: 700 }}>{p.status}</span></div>
-                <div style={{ marginTop: 8 }}>
-                  {p.chosen_slot ? (
-                    <div>Обраний слот: {toLocal(p.chosen_slot.start)} — {toLocal(p.chosen_slot.end)}</div>
-                  ) : null}
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                {amMentor ? (
-                  <>
-                    <Link to={`/mentor/proposals/${p.id}`} style={{ padding: '8px 12px', background: '#4f46e5', color: '#fff', borderRadius: 8, textDecoration: 'none' }}>Керувати</Link>
-                    {p.status === 'student_chosen' ? (
-                      <button onClick={() => navigate(`/proposals/${p.id}`)} style={{ padding: '8px 12px', background: '#10b981', color: '#fff', borderRadius: 8, border: 'none' }}>Підтвердити</button>
-                    ) : null}
-                  </>
-                ) : null}
-                {amStudent ? (
-                  <>
-                    <Link to={`/proposals/${p.id}`} style={{ padding: '8px 12px', background: '#4f46e5', color: '#fff', borderRadius: 8, textDecoration: 'none' }}>Відкрити</Link>
-                    {p.status === 'pending' ? (
-                      <Link to={`/sessions/${p.id}/select`} style={{ padding: '8px 12px', background: '#10b981', color: '#fff', borderRadius: 8, textDecoration: 'none' }}>Оберіть час</Link>
-                    ) : null}
-                  </>
-                ) : null}
-              </div>
-            </div>
-          );
-        })}
+    <>
+      <div className="page-hero small">
+        <div className="container">
+          <h1>Мої сесії</h1>
+          <p className="lead small-muted">Усі ваші пропозиції та зустрічі в одному місці</p>
+        </div>
       </div>
-    </div>
+
+      <div className="page-content">
+        <div className="container card">
+          <div className="list-grid">
+            {proposals.map(p => {
+              const amMentor = role === 'mentor' && String(p.mentor) === String(userId);
+              const amStudent = role === 'student' && String(p.student) === String(userId);
+              const ended = p.chosen_slot && new Date(p.chosen_slot.end) < new Date();
+              const needsFeedback = ended && p.status === 'confirmed';
+              return (
+                <div key={p.id} className="item" style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                  <div>
+                    <div style={{fontWeight:700}}>#{p.id} — {p.student_username} ⇄ {p.mentor_username}</div>
+                    <div className="small-muted">Статус: <strong>{p.status}</strong></div>
+                    {p.chosen_slot ? <div className="small-muted" style={{marginTop:8}}>Обраний слот: {toLocal(p.chosen_slot.start)} — {toLocal(p.chosen_slot.end)}</div> : null}
+                  </div>
+                  <div style={{display:'flex',gap:8,alignItems:'center'}}>
+                    {amMentor ? <Link to={`/mentor/proposals/${p.id}`} className="primary-btn" style={{textDecoration:'none'}}>Змінити</Link> : null}
+                    {amStudent ? <Link to={`/proposals/${p.id}`} className="primary-btn" style={{textDecoration:'none'}}>Відкрити</Link> : null}
+                    {needsFeedback ? <Link to={`/meetings/${p.id}/feedback`} className="secondary-btn" style={{textDecoration:'none'}}>Give feedback</Link> : null}
+                    {p.whatsapp_shared ? (
+                      <a href={role === 'mentor' ? p.student_whatsapp : p.mentor_whatsapp} target="_blank" rel="noreferrer" className="primary-btn" style={{background:'#25D366',textDecoration:'none'}}>WhatsApp</a>
+                    ) : null}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </>
   );
 }

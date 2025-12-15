@@ -10,6 +10,7 @@ function GoogleRegisterPage() {
 
   const [role, setRole] = useState('student');
   const [username, setUsername] = useState(firstName || '');
+  const [whatsapp, setWhatsapp] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -18,12 +19,17 @@ function GoogleRegisterPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!whatsapp.trim()) {
+      alert('Будь ласка, вкажіть ваш WhatsApp нікнейм.');
+      return;
+    }
     setLoading(true);
     try {
       const res = await api.post('auth/google/register/', {
         token,
         role,
-        username
+        username,
+        whatsapp_username: whatsapp.trim()
       });
 
       localStorage.setItem('access_token', res.data.access);
@@ -34,7 +40,7 @@ function GoogleRegisterPage() {
       navigate('/dashboard');
 
     } catch (err) {
-      alert("Помилка реєстрації. Можливо, такий нікнейм вже зайнятий.");
+      alert("Помилка реєстрації. Можливо нікнейм вже зайнятий.");
     } finally {
       setLoading(false);
     }
@@ -43,43 +49,28 @@ function GoogleRegisterPage() {
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <h2>Завершення реєстрації 🎉</h2>
+        <h2>Завершення реєстрації</h2>
         <p style={{color: '#666', marginBottom: '20px'}}>
           Привіт, <strong>{email}</strong>! <br/>
-          Залишився останній крок. Оберіть свою роль.
+          Оберіть роль і введіть WhatsApp нікнейм.
         </p>
 
         <form onSubmit={handleSubmit} style={styles.form}>
+          <label style={styles.label}>Нікнейм</label>
+          <input style={styles.input} value={username} onChange={(e) => setUsername(e.target.value)} required />
 
-          <label style={styles.label}>Ваш нікнейм</label>
-          <input
-            style={styles.input}
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-          />
+          <label style={styles.label}>WhatsApp нікнейм</label>
+          <input style={styles.input} value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} required placeholder="наприклад 380501234567 або username"/>
 
-          <label style={styles.label}>Хто ви?</label>
+          <label style={styles.label}>Роль</label>
           <div style={styles.radioGroup}>
             <label style={{...styles.radioLabel, background: role === 'student' ? '#ffe4e9' : 'transparent'}}>
-              <input
-                type="radio"
-                value="student"
-                checked={role === 'student'}
-                onChange={() => setRole('student')}
-                style={{marginRight: '8px'}}
-              />
-              Я Студент
+              <input type="radio" value="student" checked={role === 'student'} onChange={() => setRole('student')} style={{marginRight: '8px'}} />
+              Студент
             </label>
             <label style={{...styles.radioLabel, background: role === 'mentor' ? '#dcfce7' : 'transparent'}}>
-              <input
-                type="radio"
-                value="mentor"
-                checked={role === 'mentor'}
-                onChange={() => setRole('mentor')}
-                style={{marginRight: '8px'}}
-              />
-              Я Ментор
+              <input type="radio" value="mentor" checked={role === 'mentor'} onChange={() => setRole('mentor')} style={{marginRight: '8px'}} />
+              Ментор
             </label>
           </div>
 
