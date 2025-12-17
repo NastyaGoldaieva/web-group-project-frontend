@@ -18,7 +18,8 @@ function MentorDetailPage() {
   }, [id]);
 
   const sendRequest = async () => {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem('access') || localStorage.getItem('access_token');
+
     if (!token) {
       alert("Будь ласка, увійдіть у систему, щоб подати заявку!");
       return;
@@ -26,10 +27,10 @@ function MentorDetailPage() {
 
     try {
       await api.post('requests/', {
-        mentor: mentor.user_id,
+        mentor: mentor.user_id || mentor.user?.id || mentor.id,
         message: message
       });
-      alert("Заявку успішно відправлено! ");
+      alert("Заявку успішно відправлено!");
       setMessage("");
     } catch (error) {
       console.error(error);
@@ -38,20 +39,32 @@ function MentorDetailPage() {
     }
   };
 
-  if (loading) return <div>Завантаження...</div>;
-  if (!mentor) return <div>Ментор не знайдено</div>;
+  const getDisplayName = () => {
+    if (!mentor) return '';
+
+    if (mentor.user && typeof mentor.user === 'object') {
+       const fullName = `${mentor.user.first_name || ''} ${mentor.user.last_name || ''}`.trim();
+       if (fullName) return fullName;
+       return mentor.user.username;
+    }
+    return mentor.user?.username || mentor.user || mentor.username || 'Ментор';
+  };
+
+  if (loading) return <div style={{textAlign:'center', marginTop: 50}}>Завантаження...</div>;
+  if (!mentor) return <div style={{textAlign:'center', marginTop: 50}}>Ментор не знайдено</div>;
 
   return (
     <div style={{ maxWidth: '800px', margin: '40px auto', padding: '20px' }}>
       <Link to="/mentors" style={{ textDecoration: 'none', color: '#666', marginBottom: '20px', display: 'inline-block' }}>← Назад до списку</Link>
 
       <div style={{ marginTop: '20px', border: '1px solid #ddd', borderRadius: '12px', padding: '30px', background: 'white', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
-        <h1 style={{ marginTop: 0 }}>{mentor.user?.username || mentor.username}</h1>
-        <p style={{ color: '#555', fontSize: '1.1rem' }}><strong>{mentor.title}</strong></p>
+
+        <h1 style={{ marginTop: 0, color: '#333' }}>{getDisplayName()}</h1>
+        <p style={{ color: '#ec008c', fontSize: '1.1rem', fontWeight: 'bold' }}>{mentor.title || 'Спеціалізація не вказана'}</p>
 
         <div style={{ margin: '20px 0', lineHeight: '1.6' }}>
-            <p><strong>Bio:</strong> {mentor.bio || 'Немає опису'}</p>
-            <p><strong>Skills:</strong> {mentor.skills || 'Не вказано'}</p>
+            <p><strong>Про мене:</strong> {mentor.bio || 'Немає опису'}</p>
+            <p><strong>Навички:</strong> {mentor.skills || 'Не вказано'}</p>
             <p><strong>Локація:</strong> {mentor.location || 'Не вказано'}</p>
         </div>
 
@@ -77,7 +90,7 @@ function MentorDetailPage() {
         ) : (
             <div style={{ textAlign: 'center', padding: '20px', backgroundColor: '#fffafc', borderRadius: '15px', color: '#7a6375' }}>
                 {userRole === 'mentor'
-                    ? "Ментори не можуть відправляти запити іншим менторам. "
+                    ? "Ментори не можуть відправляти запити іншим менторам."
                     : "Увійдіть як студент, щоб відправити заявку."}
             </div>
         )}
