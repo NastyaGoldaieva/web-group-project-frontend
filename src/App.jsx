@@ -15,6 +15,7 @@ import MentorProposalPage from './pages/MentorProposalPage';
 import ProposalDetailPage from './pages/ProposalDetailPage';
 import SessionsPage from './pages/SessionsPage';
 import TimeSelectionPage from './pages/TimeSelectionPage';
+import MeetingFeedbackPage from './pages/MeetingFeedbackPage';
 import { logout } from './api/auth';
 import RequireAuth from './components/RequireAuth';
 import api from './api/axios';
@@ -135,6 +136,7 @@ function App() {
           <Route path="/proposals/:id" element={<RequireAuth><ProposalDetailPage /></RequireAuth>} />
           <Route path="/sessions" element={<RequireAuth><SessionsPage /></RequireAuth>} />
           <Route path="/sessions/:id/select" element={<RequireAuth><TimeSelectionPage /></RequireAuth>} />
+          <Route path="/meetings/:id/feedback" element={<RequireAuth><MeetingFeedbackPage /></RequireAuth>} />
           <Route path="/dashboard" element={<RequireAuth><DashboardPage /></RequireAuth>} />
           <Route path="/students" element={<RequireAuth><MyStudentsPage /></RequireAuth>} />
           <Route path="/proposals" element={<RequireAuth><ProposalsPage /></RequireAuth>} />

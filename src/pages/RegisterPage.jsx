@@ -15,7 +15,7 @@ function RegisterPage() {
   const handleRegister = async (e) => {
     e.preventDefault();
     if (!whatsapp.trim()) {
-      alert('Будь ласка, вкажіть ваш нікнейм у WhatsApp (без пробілів).');
+      alert('Please provide your WhatsApp username (without spaces).');
       return;
     }
     try {
@@ -28,45 +28,45 @@ function RegisterPage() {
         last_name: lastName,
         whatsapp_username: whatsapp.trim()
       });
-      alert('Реєстрація пройшла успішно. Будь ласка, увійдіть.');
+      alert('Registration successful. Please log in.');
       navigate('/login');
     } catch (err) {
       console.error(err);
       const msg = err.response?.data || err.message;
-      alert('Помилка реєстрації. ' + JSON.stringify(msg));
+      alert('Registration error. ' + JSON.stringify(msg));
     }
   };
 
   return (
     <div style={styles.container}>
       <form onSubmit={handleRegister} style={styles.card}>
-        <h2 style={{ marginBottom: 10 }}>Реєстрація</h2>
+        <h2 style={{ marginBottom: 10 }}>Register</h2>
 
-        <label style={styles.label}>Роль</label>
+        <label style={styles.label}>Role</label>
         <select value={role} onChange={(e) => setRole(e.target.value)} style={styles.input}>
-          <option value="student">Студент</option>
-          <option value="mentor">Ментор</option>
+          <option value="student">Student</option>
+          <option value="mentor">Mentor</option>
         </select>
 
-        <label style={styles.label}>Нікнейм</label>
+        <label style={styles.label}>Username</label>
         <input value={username} onChange={(e) => setUsername(e.target.value)} style={styles.input} required />
 
         <label style={styles.label}>Email</label>
         <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} style={styles.input} required />
 
-        <label style={styles.label}>Пароль</label>
+        <label style={styles.label}>Password</label>
         <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} style={styles.input} required minLength={8} />
 
-        <label style={styles.label}>WhatsApp нікнейм</label>
-        <input value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} style={styles.input} required placeholder="наприклад 380501234567 або username"/>
+        <label style={styles.label}>WhatsApp username</label>
+        <input value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} style={styles.input} required placeholder="e.g. 380501234567 or username"/>
 
-        <label style={styles.label}>Ім'я</label>
+        <label style={styles.label}>First name</label>
         <input value={firstName} onChange={(e) => setFirstName(e.target.value)} style={styles.input} />
 
-        <label style={styles.label}>Прізвище</label>
+        <label style={styles.label}>Last name</label>
         <input value={lastName} onChange={(e) => setLastName(e.target.value)} style={styles.input} />
 
-        <button type="submit" style={styles.button}>Зареєструватись</button>
+        <button type="submit" style={styles.button}>Register</button>
       </form>
     </div>
   );
