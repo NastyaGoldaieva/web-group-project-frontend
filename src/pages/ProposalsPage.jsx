@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 
 function toLocal(dtIso) {
   try {
-    return new Date(dtIso).toLocaleString();
+    return new Date(dtIso).toLocaleString('uk-UA', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
   } catch {
     return dtIso;
   }
@@ -29,36 +29,50 @@ function ProposalsPage() {
     fetch();
   }, []);
 
-  if (loading) return <div className="page-hero small"><div className="container center">Завантаження...</div></div>;
-  if (!proposals.length) return <div className="page-hero small"><div className="container center">Поки що немає пропозицій</div></div>;
+  if (loading) return <div className="page-hero small"><div className="container center">Завантаження пропозицій...</div></div>;
 
   return (
     <>
       <div className="page-hero small">
         <div className="container">
-          <h1>Пропозиції щодо зустрічей</h1>
-          <p className="lead small-muted">Переглядайте та керуйте вашими сесіями</p>
+          <h1>Пропозиції зустрічей</h1>
+          <p className="lead small-muted">Узгодження часу та сесій</p>
         </div>
       </div>
 
       <div className="page-content">
-        <div className="container card">
-          <div className="list-grid">
-            {proposals.map(p => (
-              <div key={p.id} className="item" style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                <div>
-                  <div style={{fontWeight:700}}>#{p.id} — {p.student_username} ⇄ {p.mentor_username}</div>
-                  <div className="small-muted">Статус: <strong>{p.status}</strong></div>
-                  <div style={{marginTop:8}}>
-                    {(p.slots || []).slice(0,3).map((s, idx) => <div key={idx} className="small-muted">{toLocal(s.start)} — {toLocal(s.end)}</div>)}
+        <div className="container">
+          {!proposals.length ? (
+             <div className="card" style={{ textAlign: 'center', padding: '40px' }}>Поки що немає активних пропозицій.</div>
+          ) : (
+            <div style={{ display: 'grid', gap: '20px' }}>
+              {proposals.map(p => (
+                <div key={p.id} className="card" style={{ borderLeft: '5px solid #646cff', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
+                  <div>
+                    <div style={{ fontSize: '0.85rem', color: '#888', marginBottom: '5px' }}>Пропозиція #{p.id}</div>
+                    <h3 style={{ margin: '0 0 10px 0' }}>
+                      {p.student_username} <span style={{ color: '#aaa', margin: '0 5px' }}>-</span> {p.mentor_username}
+                    </h3>
+
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                      <span style={{ background: '#eee', padding: '4px 8px', borderRadius: '4px', fontSize: '0.9rem' }}>
+                        Статус: <strong>{p.status}</strong>
+                      </span>
+                      {p.slots && p.slots.length > 0 && (
+                        <span style={{ fontSize: '0.9rem', color: '#555' }}>
+                          (Слотів запропоновано: {p.slots.length})
+                        </span>
+                      )}
+                    </div>
                   </div>
+
+                  <Link to={`/proposals/${p.id}`} className="primary-btn" style={{ textDecoration: 'none', padding: '10px 25px' }}>
+                    Відкрити деталі
+                  </Link>
                 </div>
-                <div>
-                  <Link to={`/proposals/${p.id}`} className="primary-btn" style={{textDecoration:'none'}}>Відкрити</Link>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </>
