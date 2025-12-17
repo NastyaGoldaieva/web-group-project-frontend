@@ -56,51 +56,40 @@ export default function MeetingFeedbackPage() {
     }
   };
 
-  if (loading) return <div className="page-hero small"><div className="container center">Loading...</div></div>;
-  if (!meeting) return <div className="page-hero small"><div className="container center">Meeting not found</div></div>;
+  if (loading) return <div style={{ textAlign: 'center', marginTop: 50 }}>Loading...</div>;
+  if (!meeting) return <div style={{ padding: 20 }}>Meeting not found</div>;
 
   return (
-    <>
-      <div className="page-hero small">
-        <div className="container">
-          <h1>Опитування після зустрічі</h1>
-          <p className="lead small-muted">Розкажіть, як пройшла сесія</p>
+    <div style={{ padding: 20, maxWidth: 700, margin: '0 auto' }}>
+      <h2>Feedback for meeting #{meeting.id}</h2>
+      <p><strong>Mentor:</strong> {meeting.mentor_username}</p>
+      <p><strong>Student:</strong> {meeting.student_username}</p>
+
+      <div style={{ marginTop: 16 }}>
+        <div style={{ marginBottom: 12 }}>
+          <div>Did the meeting happen?</div>
+          <label><input type="radio" name="attended" checked={attended === true} onChange={() => setAttended(true)} /> Yes</label>
+          <label style={{ marginLeft: 10 }}><input type="radio" name="attended" checked={attended === false} onChange={() => setAttended(false)} /> No</label>
+        </div>
+
+        <div style={{ marginBottom: 12 }}>
+          <div>Did you like the meeting?</div>
+          <label><input type="radio" name="liked" checked={liked === true} onChange={() => setLiked(true)} /> Yes</label>
+          <label style={{ marginLeft: 10 }}><input type="radio" name="liked" checked={liked === false} onChange={() => setLiked(false)} /> No</label>
+        </div>
+
+        <div style={{ marginBottom: 12 }}>
+          <div>Do you want to continue collaboration?</div>
+          <label><input type="radio" name="cont" checked={cont === true} onChange={() => setCont(true)} /> Yes</label>
+          <label style={{ marginLeft: 10 }}><input type="radio" name="cont" checked={cont === false} onChange={() => setCont(false)} /> No</label>
+        </div>
+
+        <div style={{ marginTop: 16 }}>
+          <button onClick={handleSubmit} disabled={submitting} style={{ padding: '10px 14px', background: '#4f46e5', color: '#fff', border: 'none', borderRadius: 8 }}>
+            {submitting ? 'Sending...' : 'Submit feedback'}
+          </button>
         </div>
       </div>
-
-      <div className="page-content">
-        <div className="container card">
-          <div><strong>Meeting #{meeting.id}</strong></div>
-          <div style={{marginTop:10}}><strong>Mentor:</strong> {meeting.mentor_username}</div>
-          <div style={{marginTop:6}}><strong>Student:</strong> {meeting.student_username}</div>
-
-          <div style={{marginTop:16}}>
-            <div style={{marginBottom:12}}>
-              <div>Чи відбулась зустріч?</div>
-              <label style={{marginRight:10}}><input type="radio" name="attended" checked={attended === true} onChange={() => setAttended(true)} /> Так</label>
-              <label><input type="radio" name="attended" checked={attended === false} onChange={() => setAttended(false)} /> Ні</label>
-            </div>
-
-            <div style={{marginBottom:12}}>
-              <div>Чи сподобалась зустріч?</div>
-              <label style={{marginRight:10}}><input type="radio" name="liked" checked={liked === true} onChange={() => setLiked(true)} /> Так</label>
-              <label><input type="radio" name="liked" checked={liked === false} onChange={() => setLiked(false)} /> Ні</label>
-            </div>
-
-            <div style={{marginBottom:12}}>
-              <div>Хочете продовжити співпрацю?</div>
-              <label style={{marginRight:10}}><input type="radio" name="cont" checked={cont === true} onChange={() => setCont(true)} /> Так</label>
-              <label><input type="radio" name="cont" checked={cont === false} onChange={() => setCont(false)} /> Ні</label>
-            </div>
-
-            <div style={{marginTop:16}}>
-              <button onClick={handleSubmit} disabled={submitting} className="primary-btn">
-                {submitting ? 'Надсилаю...' : 'Надіслати опитування'}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </>
+    </div>
   );
 }

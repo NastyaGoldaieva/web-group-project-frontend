@@ -58,56 +58,44 @@ export default function TimeSelectionPage() {
     }
   };
 
-  if (loading) return <div className="page-hero small"><div className="container center">Завантаження...</div></div>;
-  if (!proposal) return <div className="page-hero small"><div className="container center">Пропозиція не знайдена</div></div>;
+  if (loading) return <div style={{ textAlign: 'center', marginTop: 50 }}>Завантаження...</div>;
+  if (!proposal) return <div style={{ padding: 20 }}>Пропозиція не знайдена</div>;
 
   return (
-    <>
-      <div className="page-hero small">
-        <div className="container">
-          <h1>Вибір часу — Пропозиція #{proposal.id}</h1>
-          <p className="lead small-muted">Оберіть зручний час для зустрічі</p>
+    <div style={{ padding: 20, maxWidth: 800, margin: '0 auto' }}>
+      <h2>Вибір часу для зустрічі #{proposal.id}</h2>
+      <p><strong>Ментор:</strong> {proposal.mentor_username}</p>
+      <p><strong>Студент:</strong> {proposal.student_username}</p>
+      <div style={{ marginTop: 12 }}>
+        <h4>Доступні слоти</h4>
+        <div style={{ display: 'grid', gap: 8 }}>
+          {(proposal.slots || []).map((s, idx) => {
+            const key = `${s.start}|${s.end}`;
+            const isSelected = selectedKey === key;
+            return (
+              <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 12, borderRadius: 8, border: isSelected ? '2px solid #4f46e5' : '1px solid #eee', background: isSelected ? '#eef2ff' : 'white' }}>
+                <div>{toLocal(s.start)} — {toLocal(s.end)}</div>
+                <div>
+                  {meIsStudent && proposal.status === 'pending' ? (
+                    <button onClick={() => setSelectedKey(key)} style={{ padding: '8px 12px', borderRadius: 8, background: isSelected ? '#6b21a8' : '#4f46e5', color: '#fff', border: 'none' }}>
+                      {isSelected ? 'Оберено' : 'Оберіть'}
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
-
-      <div className="page-content">
-        <div className="container card">
-          <div style={{marginBottom:12}}>
-            <strong>Ментор:</strong> {proposal.mentor_username}<br/>
-            <strong>Студент:</strong> {proposal.student_username}
-          </div>
-
-          <div style={{marginTop:12}}>
-            <h3>Доступні слоти</h3>
-            <div className="list-grid">
-              {(proposal.slots || []).map((s, idx) => {
-                const key = `${s.start}|${s.end}`;
-                const isSelected = selectedKey === key;
-                return (
-                  <div key={idx} className="item" style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                    <div>{toLocal(s.start)} — {toLocal(s.end)}</div>
-                    <div>
-                      {meIsStudent && proposal.status === 'pending' ? (
-                        <button onClick={() => setSelectedKey(key)} className={`secondary-btn`} style={{background: isSelected ? '#6b21a8' : ''}}>
-                          {isSelected ? 'Оберено' : 'Оберіть'}
-                        </button>
-                      ) : null}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          <div style={{marginTop:16}}>
-            {meIsStudent && proposal.status === 'pending' ? (
-              <button onClick={handleSelect} disabled={!selectedKey || submitting} className="primary-btn">
-                {submitting ? 'Обробка...' : 'Підтвердити вибір'}
-              </button>
-            ) : <div className="small-muted">Чекайте, поки ментор надасть слоти або підтвердить вибір.</div>}
-          </div>
-        </div>
+      <div style={{ marginTop: 16 }}>
+        {meIsStudent && proposal.status === 'pending' ? (
+          <button onClick={handleSelect} disabled={!selectedKey || submitting} style={{ padding: '10px 14px', background: !selectedKey ? '#9ee0bf' : '#10b981', color: '#fff', border: 'none', borderRadius: 8 }}>
+            {submitting ? 'Обробка...' : 'Підтвердити вибір'}
+          </button>
+        ) : (
+          <div style={{ color: '#666' }}>Чекайте, поки ментор надасть слоти або підтвердить вибір.</div>
+        )}
       </div>
-    </>
+    </div>
   );
 }
